@@ -1,0 +1,1 @@
+Auto setup for windows
