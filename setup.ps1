@@ -139,6 +139,8 @@ function Get-Missing-Apps {
 
 #install missing apps
 function Install-Missing-Apps {
+    Write-Host "[Install-Missing-Apps] Installing missing applications..." -ForegroundColor Cyan
+
     $missingApps = Get-Missing-Apps
 
     foreach ($app in $missingApps) {
@@ -150,6 +152,8 @@ function Install-Missing-Apps {
 
 
 function Set-OhMyPoshConfig {
+    Write-Host "[Set-OhMyPoshConfig] Installing and configuring Oh My Posh..." -ForegroundColor Cyan
+
     winget install -e --id JanDeDobbeleer.OhMyPosh --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
 
     Restart-EnvVariables
@@ -192,6 +196,8 @@ function Set-OhMyPoshConfig {
 
 
 function Set-WindowsTerminalConfig {
+    Write-Host "[Set-WindowsTerminalConfig] Configuring Windows Terminal..." -ForegroundColor Cyan
+
     #Install font
     oh-my-posh font install CascadiaCode
 
@@ -202,8 +208,28 @@ function Set-WindowsTerminalConfig {
         # Load current settings
         $settingsJson = Get-Content $settingsPath -Raw | ConvertFrom-Json
 
-        $settingsJson.profiles.defaults.font.face = "CaskaydiaCove Nerd Font Mono"
+        # Set default profile to PowerShell
         $settingsJson.defaultProfile = "{574e775e-4f2a-5b96-ac1e-a2962a402336}"
+
+
+        #Set font
+        # Ensure 'profiles' exists
+        if (-not $settingsJson.profiles) {
+            $settingsJson | Add-Member -MemberType NoteProperty -Name profiles -Value @{}
+        }
+
+        # Ensure 'defaults' exists
+        if (-not $settingsJson.profiles.defaults) {
+            $settingsJson.profiles | Add-Member -MemberType NoteProperty -Name defaults -Value @{}
+        }
+
+        # Ensure 'font' exists
+        if (-not $settingsJson.profiles.defaults.font) {
+            $settingsJson.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{}
+        }
+
+        # Now safe to set the font face
+        $settingsJson.profiles.defaults.font.face = "CaskaydiaCove Nerd Font Mono"
 
      
         # Save updated settings
@@ -216,6 +242,8 @@ function Set-WindowsTerminalConfig {
 }
 
 function Set-GitHubFolder {
+    Write-Host "[Set-GitHubFolder] Creating and configuring GitHub folder..." -ForegroundColor Cyan
+
     $IconUrl = "https://raw.githubusercontent.com/sameerasw/folder-icons/main/ICO/github-alt.ico"
     $githubPath = "$HOME\GitHub"
 
