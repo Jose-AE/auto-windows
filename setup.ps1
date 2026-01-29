@@ -1,9 +1,8 @@
 #SETTINGS
-$LinuxUser = "devuser"
+$linuxUser = "devuser"
 
 $appsToInstall = @(
     "Microsoft.WindowsTerminal",
-    "Microsoft.PowerShell",
     "Unity.UnityHub",
     "OBSProject.OBSStudio",
     "Google.Chrome",
@@ -48,9 +47,6 @@ if ($showTimeInPrompt) {
 '@
 
 
-
-
-
 function Test-Admin {
     #Check for admin rights
     $IsAdmin = ([Security.Principal.WindowsPrincipal] `
@@ -72,21 +68,21 @@ function Enable-WSL {
     wsl --install -d Ubuntu --no-launch
 
     # Create the user and remove password
-    Write-Host "[Enable-WSL] Creating user $LinuxUser and removing password..." -ForegroundColor Cyan
+    Write-Host "[Enable-WSL] Creating user $linuxUser and removing password..." -ForegroundColor Cyan
     wsl -d Ubuntu -u root -- bash -c "
-    id $LinuxUser 2>/dev/null || useradd -m -s /bin/bash $LinuxUser
-    passwd -d $LinuxUser
+    id $linuxUser 2>/dev/null || useradd -m -s /bin/bash $linuxUser
+    passwd -d $linuxUser
     "
 
     # Enable passwordless sudo
     wsl -d Ubuntu -u root -- bash -c "
-    echo '$LinuxUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$LinuxUser
-    chmod 440 /etc/sudoers.d/$LinuxUser
+    echo '$linuxUser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/$linuxUser
+    chmod 440 /etc/sudoers.d/$linuxUser
     "
 
     # Set default WSL user
-    Write-Host "[Enable-WSL] Setting default WSL user to $LinuxUser..." -ForegroundColor Cyan
-    ubuntu config --default-user $LinuxUser
+    Write-Host "[Enable-WSL] Setting default WSL user to $linuxUser..." -ForegroundColor Cyan
+    ubuntu config --default-user $linuxUser
 
 
     #Update and upgrade packages
@@ -277,6 +273,16 @@ IconIndex=0
 }
 
 
+function Install-Powershell-And-Run {
+    winget install -e --id Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
+
+    # Open a new PowerShell window to run the rest of the script as admin
+    Start-Process pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    exit
+
+
+}
+
 
 function Main {
     Test-Admin
@@ -288,6 +294,15 @@ function Main {
 
     Write-Host "`nSetup completed successfully!" -ForegroundColor Green
 }
+
+
+# Check if PowerShell 7+ is installed, if not install it
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Install-Powershell-And-Run
+}
+
+# Run main setup
+Main
 
 
 
