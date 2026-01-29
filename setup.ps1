@@ -273,33 +273,21 @@ IconIndex=0
 }
 
 
-function Install-Powershell-And-Run {
-    winget install -e --id Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
 
-    # Open a new PowerShell window to run the rest of the script as admin
-    Start-Process pwsh -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit
-
-
-}
 
 
 function Main {
+    Write-Host "Starting setup..." -ForegroundColor Cyan
     Test-Admin
     Enable-WSL
     Install-Missing-Apps
     Set-OhMyPoshConfig
     Set-WindowsTerminalConfig
     Set-GitHubFolder
-
     Write-Host "`nSetup completed successfully!" -ForegroundColor Green
 }
 
 
-# Check if PowerShell 7+ is installed, if not install it
-if ($PSVersionTable.PSVersion.Major -lt 7) {
-    Install-Powershell-And-Run
-}
 
 # Run main setup
 Main
