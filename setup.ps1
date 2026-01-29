@@ -64,8 +64,8 @@ function Test-Admin {
 function Enable-WSL {
     # Install / configure WSL
     Write-Host "[Enable-WSL] Enabling WSL and installing Ubuntu..." -ForegroundColor Cyan
-    wsl --set-default-version 2
     wsl --install -d Ubuntu --no-launch
+    Restart-EnvVariables
 
     # Create the user and remove password
     Write-Host "[Enable-WSL] Creating user $linuxUser and removing password..." -ForegroundColor Cyan
@@ -151,6 +151,8 @@ function Install-Missing-Apps {
 
 function Set-OhMyPoshConfig {
     winget install -e --id JanDeDobbeleer.OhMyPosh --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
+
+    Restart-EnvVariables
 
     # Define Vars
     $configDir = "$HOME\.oh-my-posh"
@@ -273,17 +275,20 @@ IconIndex=0
 }
 
 
-
-
+function Restart-EnvVariables {
+    # Refresh environment variables
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+}
 
 function Main {
     Write-Host "Starting setup..." -ForegroundColor Cyan
     Test-Admin
     Enable-WSL
-    Install-Missing-Apps
     Set-OhMyPoshConfig
     Set-WindowsTerminalConfig
     Set-GitHubFolder
+    
+    Install-Missing-Apps
     Write-Host "`nSetup completed successfully!" -ForegroundColor Green
 }
 
