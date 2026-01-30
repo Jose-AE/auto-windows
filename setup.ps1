@@ -1,5 +1,5 @@
 #SETTINGS
-$linuxUser = "devuser"
+$linuxUser = "JoseAE"
 
 $appsToInstall = @(
     "Microsoft.WindowsTerminal",
@@ -65,7 +65,13 @@ function Enable-WSL {
     # Install / configure WSL
     Write-Host "[Enable-WSL] Enabling WSL and installing Ubuntu..." -ForegroundColor Cyan
     wsl --install -d Ubuntu --no-launch
-    Restart-EnvVariables
+
+    #If WSL install fails, return
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "[Enable-WSL] WSL installation failed. Please try again."
+        return
+    }
+
 
     # Create the user and remove password
     Write-Host "[Enable-WSL] Creating user $linuxUser and removing password..." -ForegroundColor Cyan
@@ -82,7 +88,7 @@ function Enable-WSL {
 
     # Set default WSL user
     Write-Host "[Enable-WSL] Setting default WSL user to $linuxUser..." -ForegroundColor Cyan
-    ubuntu config --default-user $linuxUser
+    wsl -d Ubuntu --set-default-user $linuxUser
 
 
     #Update and upgrade packages
@@ -144,7 +150,6 @@ function Install-Missing-Apps {
     $missingApps = Get-Missing-Apps
 
     foreach ($app in $missingApps) {
-        Write-Host "[Install-Missing-Apps] Installing $($app.Application)..." -ForegroundColor Yellow
         winget install -e --id $app.Application --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
     }
 }
@@ -178,20 +183,15 @@ function Set-OhMyPoshConfig {
 
     #Install Oh My Posh in WSL and theme
     wsl -d Ubuntu -- bash -c "
+    sudo apt install -y  unzip
     curl -s https://ohmyposh.dev/install.sh | sudo bash -s -- -d /usr/local/bin
     mkdir -p ~/.oh-my-posh
     curl -sSL $ohMyPoshThemeUrl -o ~/.oh-my-posh/theme.omp.json
     "
 
     #Setup Oh My Posh in WSL bash profile
-    wsl -d Ubuntu -- bash -c '
-    eval_line=$(oh-my-posh init bash --config ~/.oh-my-posh/theme.omp.json)
+    wsl -d Ubuntu -- bash -lc 'grep -Fxq "eval \"\$(oh-my-posh init bash --config ~/.oh-my-posh/theme.omp.json)\"" ~/.bashrc || echo "eval \"\$(oh-my-posh init bash --config ~/.oh-my-posh/theme.omp.json)\"" >> ~/.bashrc'
 
-    grep -qxF "$eval_line" ~/.bashrc || {
-        echo "$eval_line" >> ~/.bashrc
-        echo Added Oh My Posh init to ~/.bashrc
-    }
-   '
 }
 
 
@@ -208,9 +208,8 @@ function Set-WindowsTerminalConfig {
         # Load current settings
         $settingsJson = Get-Content $settingsPath -Raw | ConvertFrom-Json
 
-        # Set default profile to PowerShell
+        # Set default profile to PowerShell 7
         $settingsJson.defaultProfile = "{574e775e-4f2a-5b96-ac1e-a2962a402336}"
-
 
         #Set font
         # Ensure 'profiles' exists
@@ -250,11 +249,8 @@ function Set-GitHubFolder {
     # Create folder if it doesn't exist
     if (-not (Test-Path $githubPath)) {
         New-Item -ItemType Directory -Path $githubPath -Force | Out-Null
-        Write-Host "[Set-GitHubFolder] Created GitHub folder at $githubPath" -ForegroundColor Cyan
     }
-    else {
-        Write-Host "[Set-GitHubFolder] GitHub folder already exists at $githubPath" -ForegroundColor Yellow
-    }
+    
 
     # Pin folder to Quick Access
     try {
@@ -263,7 +259,6 @@ function Set-GitHubFolder {
         if ($folder) {
             $folderItem = $folder.Self
             $folderItem.InvokeVerb("pintohome")
-            Write-Host "[Set-GitHubFolder] Pinned GitHub folder to Quick Access" -ForegroundColor Green
         }
     }
     catch {
@@ -296,10 +291,17 @@ IconIndex=0
     $desktopIniContent | Set-Content -Path $desktopIniPath -Encoding Unicode
 
     # Set folder and desktop.ini attributes
-    attrib +s $githubPath          # make folder system to apply desktop.ini icon
     attrib +h +s $desktopIniPath   # hide desktop.ini
+    attrib +s $githubPath          # make folder system to apply desktop.ini icon
 
-    Write-Host "[Set-GitHubFolder] Applied custom GitHub icon" -ForegroundColor Green
+
+}
+
+function Set-Git-Settings {
+    Write-Host "[Set-Git-Settings] Configuring Git settings..." -ForegroundColor Cyan
+    git config --global user.name "JoseAE"
+    git config --global user.email "107892696+Jose-AE@users.noreply.github.com"
+    git config --global core.autocrlf input
 }
 
 
@@ -315,29 +317,10 @@ function Main {
     Set-OhMyPoshConfig
     Set-WindowsTerminalConfig
     Set-GitHubFolder
-    
     Install-Missing-Apps
+    Set-Git-Settings
     Write-Host "`nSetup completed successfully!" -ForegroundColor Green
 }
 
 
-
-# Run main setup
 Main
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
