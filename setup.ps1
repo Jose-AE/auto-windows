@@ -16,7 +16,7 @@ $appsToInstall = @(
     "Canva.Affinity",
     "Git.Git",
     "CPUID.HWMonitor",
-    "Postman.Postman",
+    "Bruno.Bruno",
     "PrismLauncher.PrismLauncher",
     "HandBrake.HandBrake",
     "Microsoft.VisualStudioCode"
