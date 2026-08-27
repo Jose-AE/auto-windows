@@ -37,6 +37,7 @@ if ($showTimeInPrompt) {
 
 $configPath = "$HOME\.oh-my-posh\theme.omp.json"
 oh-my-posh init pwsh --config $configPath | Invoke-Expression
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8 
 
 #==========Profile End============#
 
